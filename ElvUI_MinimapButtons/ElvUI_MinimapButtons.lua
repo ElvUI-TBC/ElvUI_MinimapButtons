@@ -1,7 +1,6 @@
-﻿local addonName = "ElvUI_MinimapButtons";
-local E, L, V, P, G, _ = unpack(ElvUI);
+﻿local E, L, V, P, G, _ = unpack(ElvUI)
 local EP = LibStub("LibElvUIPlugin-1.0")
-local addon = E:NewModule("MinimapButtons", "AceHook-3.0", "AceTimer-3.0");
+local addon = E:NewModule("MinimapButtons", "AceHook-3.0", "AceTimer-3.0")
 
 local ceil = math.ceil
 local find, len, split, sub = string.find, string.len, string.split, string.sub
@@ -45,10 +44,10 @@ P.general.minimap.buttons = {
 };
 
 local function GetOptions()
-	E.Options.args.maps.args.minimap.args.testGroup = {
+	E.Options.args.maps.args.minimap.args.buttonGrabber = {
 		order = 10,
 		type = "group",
-		name = addonName,
+		name = "ElvUI_MinimapButtons",
 		get = function(info) return E.db.general.minimap.buttons[ info[#info] ]; end,
 		set = function(info, value) E.db.general.minimap.buttons[ info[#info] ] = value; addon:UpdateLayout(); addon:UpdateAlpha(); end,
 		args = {
@@ -159,12 +158,10 @@ local IgnoreButtons = {
 	"ButtonCollectFrame",
 	"GameTimeFrame",
 	"MiniMapBattlefieldFrame",
-	"MiniMapLFGFrame",
 	"MiniMapMailFrame",
 	"MiniMapPing",
 	"MiniMapRecordingButton",
 	"MiniMapTracking",
-	"MiniMapTrackingButton",
 	"MiniMapVoiceChatFrame",
 	"MiniMapWorldMapButton",
 	"Minimap",
@@ -177,22 +174,18 @@ local IgnoreButtons = {
 }
 
 local GenericIgnores = {
-	"GuildInstance",
-
 	-- GatherMate
 	"GatherMatePin",
+	-- Gatherer
 	"GatherNote",
-	-- GuildMap3
-	"GuildMap3Mini",
+	-- GuildMap2
+	"GuildMap2Mini",
 	-- HandyNotes
 	"HandyNotesPin",
 	-- LibRockConfig
 	"LibRockConfig-1.0_MinimapButton",
 	-- Nauticus
-	"NauticusMiniIcon",
-	"WestPointer",
-	-- Spy
-	"Spy_MapNoteList_mini",
+	"Naut_MiniMapIconButton",
 }
 
 local PartialIgnores = {
@@ -547,7 +540,7 @@ function addon:FixButtons()
 end
 
 function addon:Initialize()
-	EP:RegisterPlugin(addonName, GetOptions);
+	EP:RegisterPlugin("ElvUI_MinimapButtons", GetOptions);
 
 	local db = E.db.general.minimap.buttons;
 	local backdropSpacing = db.backdropSpacing or db.buttonspacing;
