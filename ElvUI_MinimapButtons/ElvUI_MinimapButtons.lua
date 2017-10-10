@@ -1,4 +1,4 @@
-﻿local E, L, V, P, G, _ = unpack(ElvUI)
+local E, L, V, P, G, _ = unpack(ElvUI)
 local EP = LibStub("LibElvUIPlugin-1.0")
 local addon = E:NewModule("MinimapButtons", "AceHook-3.0", "AceTimer-3.0")
 
@@ -287,7 +287,7 @@ function addon:SkinMinimapButton(button)
 					region:SetTexture("Interface\\Icons\\INV_Helmet_87")
 				elseif name == "OutfitterMinimapButton" then
 					if region:GetTexture() == "Interface\\Addons\\Outfitter\\Textures\\MinimapButton" then
-						region:SetTexture(nil)
+						region:SetTexture("Interface\\Icons\\INV_Chest_Cloth_43")
 					end
 				elseif name == "SmartBuff_MiniMapButton" then
 					region:SetTexture("Interface\\Icons\\Spell_Nature_Purge")
