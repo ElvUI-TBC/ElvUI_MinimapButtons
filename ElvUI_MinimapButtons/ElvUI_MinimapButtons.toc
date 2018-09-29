@@ -1,8 +1,8 @@
 ﻿## Interface: 20400
-## Title: |cffA11313E|r|cffC4C4C4lvUI|r |cffA11313M|r|cffC4C4C4inimap|r |cffA11313B|r|cffC4C4C4uttons|r
+## Title: |cff00b30bE|r|cffC4C4C4lvUI|r |cff00b30bM|r|cffC4C4C4inimap|r |cff00b30bB|r|cffC4C4C4uttons|r
 ## Author: Pinya, Bunny
 ## Version: 1.01
 ## RequiredDeps: ElvUI
 
-locales\load_locales.xml
+Locales\Load_Locales.xml
 ElvUI_MinimapButtons.lua
