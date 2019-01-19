@@ -1,4 +1,4 @@
-local E, L, V, P, G, _ = unpack(ElvUI)
+local E, L, V, P, G = unpack(ElvUI)
 local EP = LibStub("LibElvUIPlugin-1.0")
 local addon = E:NewModule("MinimapButtons", "AceHook-3.0", "AceTimer-3.0")
 
@@ -35,6 +35,7 @@ P.general.minimap.buttons = {
 	point = "TOPLEFT",
 	mouseover = false,
 	backdrop = true,
+	transparentBackdrop = false,
 	insideMinimap = {
 		enable = true,
 		position = "TOPLEFT",
@@ -87,8 +88,8 @@ local function GetOptions()
 	E.Options.args.elvuiPlugins.args.buttonGrabber = {
 		type = "group",
 		name = ColorizeSettingName(L["Minimap Buttons"]),
-		get = function(info) return E.db.general.minimap.buttons[ info[#info] ]; end,
-		set = function(info, value) E.db.general.minimap.buttons[ info[#info] ] = value; addon:UpdateLayout(); addon:UpdateAlpha(); end,
+		get = function(info) return E.db.general.minimap.buttons[ info[#info] ] end,
+		set = function(info, value) E.db.general.minimap.buttons[ info[#info] ] = value addon:UpdateLayout() addon:UpdateAlpha() end,
 		args = {
 			header = {
 				order = 1,
@@ -107,24 +108,23 @@ local function GetOptions()
 				type = "toggle",
 				name = L["Backdrop"]
 			},
-			mouseover = {
+			transparentBackdrop = {
 				order = 4,
+				type = "toggle",
+				name = L["Transparent Backdrop"],
+				disabled = function() return not E.db.general.minimap.buttons.backdrop end
+			},
+			mouseover = {
+				order = 5,
 				type = "toggle",
 				name = L["Mouse Over"],
 				desc = L["The frame is not shown unless you mouse over the frame."]
 			},
 			alpha = {
-				order = 5,
+				order = 6,
 				type = "range",
 				name = L["Alpha"],
 				min = 0, max = 1, step = 0.01
-			},
-			buttonsPerRow = {
-				order = 6,
-				type = "range",
-				name = L["Buttons Per Row"],
-				desc = L["The amount of buttons to display per row."],
-				min = 1, max = 12, step = 1
 			},
 			buttonsPerRow = {
 				order = 7,
@@ -133,59 +133,71 @@ local function GetOptions()
 				desc = L["The amount of buttons to display per row."],
 				min = 1, max = 12, step = 1
 			},
-			buttonsize = {
+			buttonsPerRow = {
 				order = 8,
 				type = "range",
+				name = L["Buttons Per Row"],
+				desc = L["The amount of buttons to display per row."],
+				min = 1, max = 12, step = 1
+			},
+			buttonsize = {
+				order = 9,
+				type = "range",
 				name = L["Button Size"],
-				min = 2, max = 60, step = 1
+				min = 10, max = 60, step = 1
 			},
 			buttonspacing = {
-				order = 9,
+				order = 10,
 				type = "range",
 				name = L["Button Spacing"],
 				desc = L["The spacing between buttons."],
 				min = -1, max = 24, step = 1
 			},
 			backdropSpacing = {
-				order = 10,
+				order = 11,
 				type = "range",
 				name = L["Backdrop Spacing"],
 				desc = L["The spacing between the backdrop and the buttons."],
 				min = -1, max = 15, step = 1
 			},
 			insideMinimapGroup = {
-				order = 11,
+				order = 12,
 				type = "group",
 				name = L["Inside Minimap"],
 				guiInline = true,
-				get = function(info) return E.db.general.minimap.buttons.insideMinimap[info[#info]]; end,
-				set = function(info, value) E.db.general.minimap.buttons.insideMinimap[info[#info]] = value; addon:UpdatePosition(); end,
+				get = function(info) return E.db.general.minimap.buttons.insideMinimap[info[#info]] end,
+				set = function(info, value) E.db.general.minimap.buttons.insideMinimap[info[#info]] = value addon:UpdatePosition() end,
 				args = {
 					enable = {
 						order = 1,
 						type = "toggle",
 						name = L["Enable"],
 					},
-					position = {
+					spacer = {
 						order = 2,
+						type = "description",
+						name = ""
+					},
+					position = {
+						order = 3,
 						type = "select",
 						name = L["Position"],
 						values = positionValues,
-						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable; end
+						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable end
 					},
 					xOffset = {
-						order = 3,
+						order = 4,
 						type = "range",
 						name = L["xOffset"],
 						min = -20, max = 20, step = 1,
-						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable; end
-					};
+						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable end
+					},
 					yOffset = {
-						order = 4,
+						order = 5,
 						type = "range",
 						name = L["yOffset"],
 						min = -20, max = 20, step = 1,
-						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable; end
+						disabled = function() return not E.db.general.minimap.buttons.insideMinimap.enable end
 					}
 				}
 			}
@@ -243,26 +255,26 @@ local WhiteList = {
 }
 
 function addon:CheckVisibility()
-	local updateLayout = false;
+	local updateLayout = false
 
 	for _, button in ipairs(SkinnedButtons) do
-		if(button:IsVisible() and button.hidden) then
-			button.hidden = false;
-			updateLayout = true;
-		elseif(not button:IsVisible() and not button.hidden) then
-			button.hidden = true;
-			updateLayout = true;
+		if button:IsVisible() and button.hidden then
+			button.hidden = false
+			updateLayout = true
+		elseif not button:IsVisible() and not button.hidden then
+			button.hidden = true
+			updateLayout = true
 		end
 	end
 
-	return updateLayout;
+	return updateLayout
 end
 
 function addon:GrabMinimapButtons()
 	for i = 1, Minimap:GetNumChildren() do
 		local object = select(i, Minimap:GetChildren())
 
-		if(object and object:IsObjectType("Button") and object:GetName()) then
+		if object and object:IsObjectType("Button") and object:GetName() then
 			self:SkinMinimapButton(object)
 		end
 	end
@@ -270,22 +282,22 @@ function addon:GrabMinimapButtons()
 	for i = 1, MinimapBackdrop:GetNumChildren() do
 		local object = select(i, MinimapBackdrop:GetChildren())
 
-		if(object and object:IsObjectType("Button") and object:GetName()) then
+		if object and object:IsObjectType("Button") and object:GetName() then
 			self:SkinMinimapButton(object)
 		end
 	end
 
-	if(AtlasButtonFrame) then self:SkinMinimapButton(AtlasButton); end
-	if(FishingBuddyMinimapFrame) then self:SkinMinimapButton(FishingBuddyMinimapButton); end
-	if(HealBot_MMButton) then self:SkinMinimapButton(HealBot_MMButton); end
+	if AtlasButtonFrame then self:SkinMinimapButton(AtlasButton) end
+	if FishingBuddyMinimapFrame then self:SkinMinimapButton(FishingBuddyMinimapButton) end
+	if HealBot_MMButton then self:SkinMinimapButton(HealBot_MMButton) end
 
-	if(self:CheckVisibility() or self.needupdate) then
+	if self:CheckVisibility() or self.needupdate then
 		self:UpdateLayout()
 	end
 end
 
 function addon:SkinMinimapButton(button)
-	if (not button or button.isSkinned) then return end
+	if not button or button.isSkinned then return end
 
 	local name = button:GetName()
 	if not name then return end
@@ -341,27 +353,29 @@ function addon:SkinMinimapButton(button)
 
 				region:ClearAllPoints()
 				region:SetInside()
-				region:SetTexCoord(unpack(E.TexCoords))
-				button:HookScript("OnLeave", function(self) region:SetTexCoord(unpack(E.TexCoords)) end)
+				region.SetPoint = E.noop
 
+				region:SetTexCoord(unpack(E.TexCoords))
+				region.SetTexCoord = E.noop
 				region:SetDrawLayer("ARTWORK")
-				region.SetPoint = function() return end
 			end
 		end
 	end
 
-	button:SetParent(self.frame);
+	button:SetParent(self.frame)
 	button:SetFrameLevel(self.frame:GetFrameLevel() + 2)
 
-	button:SetTemplate("Default");
-	button:SetScript("OnDragStart", nil);
-	button:SetScript("OnDragStop", nil);
-	button:HookScript("OnEnter", self.OnEnter);
-	button:HookScript("OnLeave", self.OnLeave);
+	button:SetTemplate("Default")
+	button:StyleButton()
 
-	button.isSkinned = true;
-	tinsert(SkinnedButtons, button);
-	self.needupdate = true;
+	button:SetScript("OnDragStart", nil)
+	button:SetScript("OnDragStop", nil)
+	button:HookScript("OnEnter", self.OnEnter)
+	button:HookScript("OnLeave", self.OnLeave)
+
+	button.isSkinned = true
+	tinsert(SkinnedButtons, button)
+	self.needupdate = true
 end
 
 function addon:GetVisibleList()
@@ -376,95 +390,101 @@ function addon:GetVisibleList()
 end
 
 function addon:UpdateLayout()
-	if(#SkinnedButtons < 1) then return; end
+	if #SkinnedButtons < 1 then return end
 
-	local db = E.db.general.minimap.buttons;
-	local VisibleButtons = self:GetVisibleList();
+	local db = E.db.general.minimap.buttons
+	local VisibleButtons = self:GetVisibleList()
 
-	if(#VisibleButtons < 1) then
-		self.frame:Size(db.buttonsize + (db.buttonspacing * 2));
-		self.frame.backdrop:Hide();
+	if #VisibleButtons < 1 then
+		self.frame:Size(db.buttonsize + (db.buttonspacing * 2))
+		self.frame.backdrop:Hide()
 		return
 	end
 
-	if(not self.frame.backdrop:IsShown()) then
-		self.frame.backdrop:Show();
+	if not self.frame.backdrop:IsShown() then
+		self.frame.backdrop:Show()
 	end
 
-	local backdropSpacing = db.backdropSpacing or db.buttonspacing;
-	local numButtons = #VisibleButtons;
-	local buttonsPerRow = db.buttonsPerRow;
-	local numColumns = ceil(numButtons / buttonsPerRow);
+	local backdropSpacing = db.backdropSpacing or db.buttonspacing
+	local numButtons = #VisibleButtons
+	local buttonsPerRow = db.buttonsPerRow
+	local numColumns = ceil(numButtons / buttonsPerRow)
 
-	if(numButtons < buttonsPerRow) then
-		buttonsPerRow = numButtons;
+	if numButtons < buttonsPerRow then
+		buttonsPerRow = numButtons
 	end
 
-	local barWidth = (db.buttonsize * buttonsPerRow) + (db.buttonspacing * (buttonsPerRow - 1)) + ((db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing)*2);
-	local barHeight = (db.buttonsize * numColumns) + (db.buttonspacing * (numColumns - 1)) + ((db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing)*2);
-	self.frame:Size(barWidth, barHeight);
-	self.frame.mover:Size(barWidth, barHeight);
+	local barWidth = (db.buttonsize * buttonsPerRow) + (db.buttonspacing * (buttonsPerRow - 1)) + ((db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing)*2)
+	local barHeight = (db.buttonsize * numColumns) + (db.buttonspacing * (numColumns - 1)) + ((db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing)*2)
+	self.frame:Size(barWidth, barHeight)
+	self.frame.mover:Size(barWidth, barHeight)
 
-	if(db.backdrop == true) then
-		self.frame.backdrop:Show();
+	if db.backdrop == true then
+		self.frame.backdrop:Show()
 	else
-		self.frame.backdrop:Hide();
+		self.frame.backdrop:Hide()
 	end
 
-	local horizontalGrowth, verticalGrowth;
-	if(db.point == "TOPLEFT" or db.point == "TOPRIGHT") then
-		verticalGrowth = "DOWN";
+	if db.transparentBackdrop then
+		self.frame.backdrop:SetTemplate("Transparent")
 	else
-		verticalGrowth = "UP";
+		self.frame.backdrop:SetTemplate("Default")
 	end
 
-	if(db.point == "BOTTOMLEFT" or db.point == "TOPLEFT") then
-		horizontalGrowth = "RIGHT";
+	local horizontalGrowth, verticalGrowth
+	if db.point == "TOPLEFT" or db.point == "TOPRIGHT" then
+		verticalGrowth = "DOWN"
 	else
-		horizontalGrowth = "LEFT";
+		verticalGrowth = "UP"
 	end
 
-	local firstButtonSpacing = (db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing);
+	if db.point == "BOTTOMLEFT" or db.point == "TOPLEFT" then
+		horizontalGrowth = "RIGHT"
+	else
+		horizontalGrowth = "LEFT"
+	end
+
+	local firstButtonSpacing = (db.backdrop == true and (E.Border + backdropSpacing) or E.Spacing)
 	for i, button in ipairs(VisibleButtons) do
-		local lastButton = VisibleButtons[i - 1];
-		local lastColumnButton = VisibleButtons[i - buttonsPerRow];
-		button:Size(db.buttonsize);
-		button:ClearAllPoints();
+		local lastButton = VisibleButtons[i - 1]
+		local lastColumnButton = VisibleButtons[i - buttonsPerRow]
+		button:Size(db.buttonsize)
+		button:ClearAllPoints()
 
-		if(i == 1) then
-			local x, y;
-			if(db.point == "BOTTOMLEFT") then
-				x, y = firstButtonSpacing, firstButtonSpacing;
-			elseif(db.point == "TOPRIGHT") then
-				x, y = -firstButtonSpacing, -firstButtonSpacing;
-			elseif(db.point == "TOPLEFT") then
-				x, y = firstButtonSpacing, -firstButtonSpacing;
+		if i == 1 then
+			local x, y
+			if db.point == "BOTTOMLEFT" then
+				x, y = firstButtonSpacing, firstButtonSpacing
+			elseif db.point == "TOPRIGHT" then
+				x, y = -firstButtonSpacing, -firstButtonSpacing
+			elseif db.point == "TOPLEFT" then
+				x, y = firstButtonSpacing, -firstButtonSpacing
 			else
-				x, y = -firstButtonSpacing, firstButtonSpacing;
+				x, y = -firstButtonSpacing, firstButtonSpacing
 			end
 
-			button:Point(db.point, self.frame, db.point, x, y);
-		elseif((i - 1) % buttonsPerRow == 0) then
-			local x = 0;
-			local y = -db.buttonspacing;
-			local buttonPoint, anchorPoint = "TOP", "BOTTOM";
-			if(verticalGrowth == "UP") then
-				y = db.buttonspacing;
-				buttonPoint = "BOTTOM";
-				anchorPoint = "TOP";
+			button:Point(db.point, self.frame, db.point, x, y)
+		elseif (i - 1) % buttonsPerRow == 0 then
+			local x = 0
+			local y = -db.buttonspacing
+			local buttonPoint, anchorPoint = "TOP", "BOTTOM"
+			if verticalGrowth == "UP" then
+				y = db.buttonspacing
+				buttonPoint = "BOTTOM"
+				anchorPoint = "TOP"
 			end
-			button:Point(buttonPoint, lastColumnButton, anchorPoint, x, y);
+			button:Point(buttonPoint, lastColumnButton, anchorPoint, x, y)
 		else
-			local x = db.buttonspacing;
-			local y = 0;
-			local buttonPoint, anchorPoint = "LEFT", "RIGHT";
-			if(horizontalGrowth == "LEFT") then
-				x = -db.buttonspacing;
-				buttonPoint = "RIGHT";
-				anchorPoint = "LEFT";
+			local x = db.buttonspacing
+			local y = 0
+			local buttonPoint, anchorPoint = "LEFT", "RIGHT"
+			if horizontalGrowth == "LEFT" then
+				x = -db.buttonspacing
+				buttonPoint = "RIGHT"
+				anchorPoint = "LEFT"
 			end
 
-			button:Point(buttonPoint, lastButton, anchorPoint, x, y);
+			button:Point(buttonPoint, lastButton, anchorPoint, x, y)
 		end
 	end
 
@@ -472,37 +492,37 @@ function addon:UpdateLayout()
 end
 
 function addon:UpdatePosition()
-	local db = E.db.general.minimap.buttons.insideMinimap;
+	local db = E.db.general.minimap.buttons.insideMinimap
 
-	if(db.enable) then
-		self.frame:ClearAllPoints();
-		self.frame:Point(db.position, Minimap, db.position, db.xOffset, db.yOffset);
+	if db.enable then
+		self.frame:ClearAllPoints()
+		self.frame:Point(db.position, Minimap, db.position, db.xOffset, db.yOffset)
 
-		E:DisableMover(self.frame.mover:GetName());
+		E:DisableMover(self.frame.mover:GetName())
 	else
-		self.frame:ClearAllPoints();
-		self.frame:SetAllPoints(self.frame.mover);
+		self.frame:ClearAllPoints()
+		self.frame:SetAllPoints(self.frame.mover)
 
-		E:EnableMover(self.frame.mover:GetName());
+		E:EnableMover(self.frame.mover:GetName())
 	end
 end
 
 function addon:UpdateAlpha()
-	if(E.db.general.minimap.buttons.mouseover) then
-		self.frame:SetAlpha(0);
+	if E.db.general.minimap.buttons.mouseover then
+		self.frame:SetAlpha(0)
 	else
-		self.frame:SetAlpha(E.db.general.minimap.buttons.alpha);
+		self.frame:SetAlpha(E.db.general.minimap.buttons.alpha)
 	end
 end
 
 function addon:OnEnter()
-	if(E.db.general.minimap.buttons.mouseover) then
+	if E.db.general.minimap.buttons.mouseover then
 		UIFrameFadeIn(ElvUI_MinimapButtonGrabber, 0.1, ElvUI_MinimapButtonGrabber:GetAlpha(), E.db.general.minimap.buttons.alpha)
 	end
 end
 
 function addon:OnLeave()
-	if(E.db.general.minimap.buttons.mouseover) then
+	if E.db.general.minimap.buttons.mouseover then
 		UIFrameFadeOut(ElvUI_MinimapButtonGrabber, 0.1, ElvUI_MinimapButtonGrabber:GetAlpha(), 0)
 	end
 end
@@ -546,7 +566,7 @@ local function EnchantrixIconFix()
 	Enchantrix.MiniIcon = newButton
 
 	function Enchantrix.MiniIcon.Reposition()
-		if (settings.GetSetting("miniicon.enable")) then
+		if settings.GetSetting("miniicon.enable") then
 			newButton:Show()
 		else
 			newButton:Hide()
@@ -557,14 +577,15 @@ end
 function addon:FixButtons()
 	if IsAddOnLoaded("Atlas") then
 		function AtlasButton_Toggle()
-			if(AtlasButton:IsVisible()) then
-				AtlasButton:Hide();
-				AtlasOptions.AtlasButtonShown = false;
+			if AtlasButton:IsVisible() then
+				AtlasButton:Hide()
+				AtlasOptions.AtlasButtonShown = false
 			else
-				AtlasButton:Show();
-				AtlasOptions.AtlasButtonShown = true;
+				AtlasButton:Show()
+				AtlasOptions.AtlasButtonShown = true
 			end
-			AtlasOptions_Init();
+
+			AtlasOptions_Init()
 		end
 	end
 
@@ -584,37 +605,37 @@ function addon:FixButtons()
 end
 
 function addon:Initialize()
-	EP:RegisterPlugin("ElvUI_MinimapButtons", GetOptions);
+	EP:RegisterPlugin("ElvUI_MinimapButtons", GetOptions)
 
-	local db = E.db.general.minimap.buttons;
-	local backdropSpacing = db.backdropSpacing or db.buttonspacing;
+	local db = E.db.general.minimap.buttons
+	local backdropSpacing = db.backdropSpacing or db.buttonspacing
 
 	self.frame = CreateFrame("Button", "ElvUI_MinimapButtonGrabber", UIParent)
-	self.frame:Size(db.buttonsize + (backdropSpacing * 2));
-	self.frame:Point("TOPRIGHT", MMHolder, "BOTTOMRIGHT", 0, 0);
+	self.frame:Size(db.buttonsize + (backdropSpacing * 2))
+	self.frame:Point("TOPRIGHT", MMHolder, "BOTTOMRIGHT", 0, 0)
 	self.frame:SetFrameStrata("LOW")
 	self.frame:SetClampedToScreen(true)
-	self.frame:CreateBackdrop("Default");
+	self.frame:CreateBackdrop("Default")
 
-	self.frame.backdrop:SetPoint("TOPLEFT", self.frame, "TOPLEFT", E.Spacing, -E.Spacing);
-	self.frame.backdrop:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -E.Spacing, E.Spacing);
+	self.frame.backdrop:SetPoint("TOPLEFT", self.frame, "TOPLEFT", E.Spacing, -E.Spacing)
+	self.frame.backdrop:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -E.Spacing, E.Spacing)
 	self.frame.backdrop:Hide()
 
-	E:CreateMover(self.frame, "MinimapButtonGrabberMover", L["Minimap Button Grabber"], nil, nil, nil, "ALL,GENERAL");
+	E:CreateMover(self.frame, "MinimapButtonGrabberMover", L["Minimap Button Grabber"], nil, nil, nil, "ALL,GENERAL")
 
-	if(self.frame.mover:GetScript("OnSizeChanged")) then
-		self.frame.mover:SetScript("OnSizeChanged", nil);
+	if self.frame.mover:GetScript("OnSizeChanged") then
+		self.frame.mover:SetScript("OnSizeChanged", nil)
 	end
 
-	self:UpdateAlpha();
-	self:UpdatePosition();
+	self:UpdateAlpha()
+	self:UpdatePosition()
 
-	self.frame:SetScript("OnEnter", self.OnEnter);
-	self.frame:SetScript("OnLeave", self.OnLeave);
+	self.frame:SetScript("OnEnter", self.OnEnter)
+	self.frame:SetScript("OnLeave", self.OnLeave)
 
-	self:ScheduleRepeatingTimer("GrabMinimapButtons", 5);
+	self:ScheduleRepeatingTimer("GrabMinimapButtons", 5)
 
-	self:FixButtons();
+	self:FixButtons()
 end
 
 local function InitializeCallback()
