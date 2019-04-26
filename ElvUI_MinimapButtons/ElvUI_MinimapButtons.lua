@@ -572,6 +572,10 @@ local function EnchantrixIconFix()
 			newButton:Hide()
 		end
 	end
+
+	-- We must run the function once, at startup, to ensure that the new icon
+	-- respects the user's saved Enchantrix "Show minimap icon" setting.
+	Enchantrix.MiniIcon.Reposition()
 end
 
 function addon:FixButtons()
