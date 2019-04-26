@@ -1,8 +1,9 @@
 ﻿## Interface: 20400
 ## Title: |cff00b30bE|r|cffC4C4C4lvUI|r |cff00b30bM|r|cffC4C4C4inimap|r |cff00b30bB|r|cffC4C4C4uttons|r
 ## Author: Pinya, Bunny
-## Version: 1.01
+## Version: 1.02
 ## RequiredDeps: ElvUI
+## OptionalDeps: Atlas, DBM-Core, Enchantrix, RecipeRadar
 
 Locales\Load_Locales.xml
 ElvUI_MinimapButtons.lua

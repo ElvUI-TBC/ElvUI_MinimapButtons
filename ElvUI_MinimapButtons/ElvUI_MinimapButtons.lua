@@ -290,6 +290,7 @@ function addon:GrabMinimapButtons()
 	if AtlasButtonFrame then self:SkinMinimapButton(AtlasButton) end
 	if FishingBuddyMinimapFrame then self:SkinMinimapButton(FishingBuddyMinimapButton) end
 	if HealBot_MMButton then self:SkinMinimapButton(HealBot_MMButton) end
+	if RecipeRadarMinimapButtonFrame then self:SkinMinimapButton(RecipeRadarMinimapButton) end
 
 	if self:CheckVisibility() or self.needupdate then
 		self:UpdateLayout()
@@ -345,6 +346,10 @@ function addon:SkinMinimapButton(button)
 					if region:GetTexture() == "Interface\\Addons\\Outfitter\\Textures\\MinimapButton" then
 						region:SetTexture("Interface\\Icons\\INV_Chest_Cloth_43")
 					end
+				elseif name == "RecipeRadarMinimapButton" then
+					-- TODO: Only the "Normal" texture is set. The "Pushed" texture somehow remains as a blank texture (despite being
+					-- set to nil above), and shows up "blank" when clicking the icon. It's a minor issue but NO FIX has been found!
+					region:SetTexture("Interface\\Icons\\INV_Scroll_03")
 				elseif name == "SmartBuff_MiniMapButton" then
 					region:SetTexture("Interface\\Icons\\Spell_Nature_Purge")
 				elseif name == "VendomaticButtonFrame" then
@@ -572,6 +577,10 @@ local function EnchantrixIconFix()
 			newButton:Hide()
 		end
 	end
+
+	-- We must run the function once, at startup, to ensure that the new icon
+	-- respects the user's saved Enchantrix "Show minimap icon" setting.
+	Enchantrix.MiniIcon.Reposition()
 end
 
 function addon:FixButtons()
@@ -591,9 +600,8 @@ function addon:FixButtons()
 
 	if IsAddOnLoaded("DBM-Core") then
 		local button = DBMMinimapButton
-		if not button then return end
 
-		if button:GetScript("OnMouseDown") then
+		if button and button:GetScript("OnMouseDown") then
 			button:SetScript("OnMouseDown", nil)
 			button:SetScript("OnMouseUp", nil)
 		end
@@ -601,6 +609,27 @@ function addon:FixButtons()
 
 	if IsAddOnLoaded("Enchantrix") then
 		EnchantrixIconFix()
+	end
+
+	if IsAddOnLoaded("RecipeRadar") then
+		-- Set up initial button visibility state after addon load, to ensure the user's
+		-- saved "show/hide minimap icon" setting is respected after reloading the UI.
+		if RecipeRadarMinimapButtonFrame:IsVisible() then
+			RecipeRadarMinimapButton:Show()
+		else
+			RecipeRadarMinimapButton:Hide()
+		end
+
+		-- Override button toggle function to deal with button rather than frame.
+		function RecipeRadar_MinimapButton_Toggle()
+			if (RecipeRadarMinimapButton:IsVisible()) then
+				RecipeRadarMinimapButton:Hide()
+				RecipeRadar_Options.ShowMinimapButton = false
+			else
+				RecipeRadarMinimapButton:Show()
+				RecipeRadar_Options.ShowMinimapButton = true
+			end
+		end
 	end
 end
 
