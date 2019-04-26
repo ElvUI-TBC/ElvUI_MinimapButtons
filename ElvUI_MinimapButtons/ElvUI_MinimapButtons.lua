@@ -591,9 +591,8 @@ function addon:FixButtons()
 
 	if IsAddOnLoaded("DBM-Core") then
 		local button = DBMMinimapButton
-		if not button then return end
 
-		if button:GetScript("OnMouseDown") then
+		if button and button:GetScript("OnMouseDown") then
 			button:SetScript("OnMouseDown", nil)
 			button:SetScript("OnMouseUp", nil)
 		end
