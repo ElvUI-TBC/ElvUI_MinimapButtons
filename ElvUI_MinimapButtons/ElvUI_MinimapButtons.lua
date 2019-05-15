@@ -242,6 +242,8 @@ local GenericIgnores = {
 	"LibRockConfig-1.0_MinimapButton",
 	-- Nauticus
 	"Naut_MiniMapIconButton",
+	-- Recipe Radar
+	"RecipeRadarMinimapIcon", -- NPC tracking icons, all suffixed from 1 to 20.
 }
 
 local PartialIgnores = {
