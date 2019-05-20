@@ -3,7 +3,7 @@
 ## Author: Pinya, Bunny
 ## Version: 1.03
 ## RequiredDeps: ElvUI
-## OptionalDeps: Atlas, DBM-Core, Enchantrix, RecipeRadar
+## OptionalDeps: Atlas, DBM-Core, Enchantrix, RecipeRadar, SimpleActionSets
 
 Locales\Load_Locales.xml
 ElvUI_MinimapButtons.lua
