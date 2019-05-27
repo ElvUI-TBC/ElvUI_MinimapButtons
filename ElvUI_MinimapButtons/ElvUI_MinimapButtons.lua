@@ -293,6 +293,7 @@ function addon:GrabMinimapButtons()
 	if FishingBuddyMinimapFrame then self:SkinMinimapButton(FishingBuddyMinimapButton) end
 	if HealBot_MMButton then self:SkinMinimapButton(HealBot_MMButton) end
 	if RecipeRadarMinimapButtonFrame then self:SkinMinimapButton(RecipeRadarMinimapButton) end
+	if SASMinimapFrame then self:SkinMinimapButton(SASMinimapButton) end
 
 	if self:CheckVisibility() or self.needupdate then
 		self:UpdateLayout()
@@ -632,6 +633,19 @@ function addon:FixButtons()
 				RecipeRadar_Options.ShowMinimapButton = true
 			end
 		end
+	end
+
+	if IsAddOnLoaded("SimpleActionSets") then
+		-- Set initial visiblity.
+		if SASMinimapFrame:IsShown() then
+			SASMinimapButton:Show()
+		else
+			SASMinimapButton:Hide()
+		end
+
+		-- Handle minimap button visibility-toggling.
+		E:HookScript(SASMinimapFrame, "OnShow", function() SASMinimapButton:Show(); end)
+		E:HookScript(SASMinimapFrame, "OnHide", function() SASMinimapButton:Hide(); end)
 	end
 end
 
